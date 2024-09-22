@@ -13,7 +13,7 @@ import com.group.backend.domain.TagRepository;
 import com.group.backend.entity.Tag;
 
 
-@RequestMapping("/tags")
+@RequestMapping("/tags/cadastrar")
 @RestController
 public class TagController {
     private final TagRepository tagRepository;

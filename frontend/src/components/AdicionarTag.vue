@@ -1,79 +1,61 @@
 <template>
-    
-    <div class="tags-cadastradas">
-      <div class="Nova-Tag">
+
+<div class="tags-cadastradas">
+  <div class="Nova-Tag">
     <button class="cadastrar-tag-nova" @click="toggleNovaTagForm">Cadastrar Tag</button>
 
-    <div v-if="exibirNovaTagForm" class="formulario-cadastro">
-    <form @submit.prevent="salvarNovaTag">
-        <img class="imagem_logo" src="frontend/src/assets/Logo_padrao.jpeg">
-        <input class="Campo_nome_cadastro" type="text" v-model="novaTag.name" placeholder="Nome da tag">
-        <input class="Campo_descricao_cadastro" type="text" v-model="novaTag.description" placeholder="Descrição da tag">
-        
-        <div>
-          <input class="checkAtivo" type="checkbox" id="checkbox-cadastro" v-model="novaTag.ativo">
-          <label for="checkbox-edicao"> Ativo</label>
-        </div>
-  
-        <button class="botao-salvar" type="submit">Salvar</button>
-        <button class="botao-cancelar" @click.prevent="cancelarCadastro">Cancelar</button>
-    </form>
+  <div v-if="exibirNovaTagForm" class="formulario-cadastro">
+    <form @submit.prevent="validadorDadosNovaTag">
+    <img class="imagem_logo" src="frontend/src/assets/Logo_padrao.jpeg">
+    <input class="Campo_nome_cadastro" type="text" v-model="novaTag.tagNome" placeholder="Nome da tag">
+    <input class="Campo_descricao_cadastro" type="text" v-model="novaTag.tagDescricao" placeholder="Descrição da tag">
+      <div>
+      <input class="checkAtivo" type="checkbox" id="checkbox-cadastro" v-model="novaTag.tagActive">
+      <label for="checkbox-edicao"> Ativo</label>
+      </div>
+
+      <button class="botao-salvar" type="submit">Salvar</button>
+      <button class="botao-cancelar" @click.prevent="cancelarCadastro">Cancelar</button>
+      </form>
     </div>
   </div>
-      <h2>Tags Cadastradas</h2>
-      <div v-for="(tag, index) in tags" :key="index" class="tag-item">
-        <img class="imagem_logo" src="frontend/src/assets/Logo_padrao.jpeg">
-        <div class="tag-info" v-if="!tag.isEditing">
-          <i class="fas fa-info-circle"></i>
-          <h3>{{ tag.name }}</h3>
-          <p>Descrição: {{ tag.description }}</p>
-          <p>Data de Criação: {{ tag.dataCriacao }}</p>
-        </div>
-  
-        <div v-if="tag.isEditing" class="tag-edit-form">
-          <form @submit.prevent="salvarTag(tag)">
-            <input class="Campo_nome" type="text" id="nome" placeholder="Nome da tag">
-            <input class="Campo_descricao" type="text" id="descricao" placeholder="Descrição da tag">
-            <div>
-              <input class="checkAtivo" type="checkbox" id="checkbox-edicao" v-model="novaTag.ativo">
-              <label for="checkbox-cadadstro"> Ativo</label>
-            </div>
-            <button class="botao-salvar" type="submit">Salvar</button>
-            <button class="botao-cancelar" @click.prevent="cancelarEdicao(tag)">Cancelar</button>
-          </form>
-        </div>
-  
-        <button v-if="!tag.isEditing" class="edit-tag" @click="editTag(tag)">Editar</button>
-      </div>
-    </div>
-  </template>
+</div>
+
+</template>
   
   <script>
+
   export default {
     data() {
       return {
-        tags: [
-          { name: 'Agricultura', description: 'Notícias sobre agricultura', ativo: true, dataCriacao: '12/09/2024', isEditing: false },
-          { name: 'Aviação', description: 'Notícias sobre aviação', ativo: true, dataCriacao: '12/09/2024', isEditing: false },
-          { name: 'Tecnologia', description: 'Notícias sobre tecnologia', ativo: false,  dataCriacao: '12/09/2024', isEditing: false }
-        ],
-        novaTag: {name: '', description: '', dataCriacao: ''},
+        novaTag: {tagNome: '', tagDescricao: '', tagData: '', tagActive: ''},
         exibirNovaTagForm: false,
         selectedTag: ''
       };
-    },
+    },    
     
     methods: {
-      // Cadastro das Tags
       toggleNovaTagForm() {
         this.exibirNovaTagForm = !this.exibirNovaTagForm;
       },
+
+      salvarTag() {
+        const requestOptions = {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({dados: this.novaTag})
+        };
+        fetch('http://localhost:8080/tags/cadastrar', requestOptions)
+        .then(response => response.json())
+      },
   
-      salvarNovaTag() {
-        if(this.novaTag.name && this.novaTag.description) {
+      validadorDadosNovaTag() {
+        if(this.novaTag.tagNome && this.novaTag.tagDescricao) {
           const hoje = new Date().toLocaleDateString();
-          this.tags.push({...this.novaTag, dataCriacao: hoje, isEditing: false});
-          this.novaTag = {name: '', ativo: true, description: ''};
+          this.novaTag.tagData = hoje;
+          this.novaTag.tagActive = true;
+          this.salvarTag();
+          this.novaTag = {tagNome: '', tagActive: false, tagDescricao: ''};
           this.exibirNovaTagForm = false;
         }
       },
@@ -81,29 +63,6 @@
       cancelarCadastro() {
         this.novaTag = {name: '', ativo: false, description: ''};
         this.exibirNovaTagForm = false;
-      },
-  
-      // Edição das Tags
-      editTag(tag) {
-        this.cancelAllEdits();
-        tag.isEditing = true;
-      },
-  
-      salvarTag(tag) {
-        tag.isEditing = false;
-        if (!this.tags.includes(tag)) {
-          this.tags.push({ ...tag });
-        }
-        console.log("Tag salva:", tag);
-      },
-  
-      cancelarEdicao(tag) {
-        tag.isEditing = false;
-        console.log("Edição cancelada:", tag);
-      },
-  
-      cancelAllEdits() {
-        this.tags.forEach(tag => tag.isEditing = false);
       }
     }
   };
@@ -152,37 +111,6 @@ h2 {
 /* Seção de informações da tag */
 .tag-info {
   margin-bottom: 10px;
-}
-
-/* Botão de editar */
-.edit-tag {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  padding: 10px 15px;
-  background-color: black;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-  font-size: 12px;
-}
-
-/* Formulário de edição da tag */
-.tag-edit-form {
-  display: flex;
-  flex-direction: column;
-  margin-top: 10px;
-}
-
-/* Campos de entrada */
-.Campo_nome, .Campo_descricao {
-  display: block;
-  width: 900px;
-  padding: 8px;
-  margin-bottom: 15px;
-  border-radius: 5px;
-  background-color: #e4ceff;
 }
 
 /* Campos de entrada para o cadastro de nova Tag */
@@ -239,4 +167,4 @@ h2 {
   width: 100%; 
 }
 
-  </style>
+</style>
